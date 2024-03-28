@@ -1,0 +1,15 @@
+{
+    "id": "tony-scroll-self",
+    "name": "文字上下轮播，中奖信息轮播",
+    "version": "001",
+    "description": "利用swiper 组件，转换而成的文字纵向轮播",
+    "keywords": [
+        "中奖，轮播，文字无缝滚动，滚动"
+    ],
+    "dcloudext": {
+        "category": [
+            "前端组件",
+            "通用组件"
+        ]
+    }
+}
