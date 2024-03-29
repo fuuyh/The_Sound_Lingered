@@ -6,16 +6,16 @@
 					<text class="fb_dmc">{{MusicName}}</text>
 				</view>
 				<view class="yp_xnr">
-					<view class="sb_xyq" >
+					<view class="sb_xyq">
 						<view class="sb_tx dh" :class="{'paused': !autoplay}">
 							<text class="qq_dyq"></text>
 							<text class="qs_deq"></text>
 							<!-- <image :src="Picture" alt="" class="zq_xtb"></image> -->
 							<image src="/static/111.jpg" alt="" class="zq_xtb"></image>
 						</view>
-						<image @click="FanBeiAutoplay()"
+						<!-- 		<image @click="FanBeiAutoplay()"
 							:src="autoplay==true?'/static/ns_img/yp_tzhi.png':'/static/ns_img/yp_ztn.png'" alt=""
-							class="yp_ztn"></image>
+							class="yp_ztn"></image> -->
 					</view>
 				</view>
 				<!-- 音频内容 -->
@@ -39,21 +39,21 @@
 		</view>
 		<view class="operating_button">
 			<!-- 操作区域 -->
-			<view class="flex collect justify-center align-center">
-				<!-- 收藏分享 -->
+			<!-- <view class="flex collect justify-center align-center"> -->
+			<!-- 收藏分享 -->
+			<!-- <i class="cuIcon-appreciate flex-sub icon_style"></i>
 				<i class="cuIcon-appreciate flex-sub icon_style"></i>
 				<i class="cuIcon-appreciate flex-sub icon_style"></i>
 				<i class="cuIcon-appreciate flex-sub icon_style"></i>
 				<i class="cuIcon-appreciate flex-sub icon_style"></i>
-				<i class="cuIcon-appreciate flex-sub icon_style"></i>
-			</view>
+			</view> -->
 			<!-- 进度条 和 播放 -->
 			<view class="audio_schedule">
 				<view class="audio_box">
 					<view class="audio_process">
 						<view class='slider'>
 							<slider @change='sliderChange' @changing="sliderChangeIng" backgroundColor="#A3A4A6"
-								activeColor='#FFFFFF' block-size="12" :value='proceessWidth' />
+								activeColor='#FFFFFF' block-size="12" :value='proceessWidth' step="1" />
 						</view>
 						<view class="time_cons">
 							<view class="duration">
@@ -87,21 +87,13 @@
 	import {
 		ref
 	} from "vue";
-
-	const MusicName = ref("哈哈哈哈哈") // 音乐名称
-	const autoplay = ref(false) // 音频状态，true表示正在播放，false表示暂停
-	const FanBeiAutoplay = () => {
-		// 点击图片上的播放按
-		autoplay.value = !autoplay.value
-	}
-
 	// 模拟音频信息
-	const proceessWidth = ref(50); // 进度条宽度
+	const proceessWidth = ref(0); // 进度条宽度
 	const audioInfo = ref({
-		currentTime: "02:30", // 当前播放时间
-		duration: "05:00" // 音频总时长
+		currentTime: "00:00", // 当前播放时间
+		duration: "00:00" // 音频总时长
 	});
-
+	
 	// 模拟歌词数据
 	const Name = ref("歌曲名"); // 歌曲名
 	const Lyric = ref([{
@@ -132,6 +124,101 @@
 	]);
 	const top = ref(0); // 歌词滚动的距离
 	const CurrentLocation = ref(2); // 当前歌词的位置
+
+	// 音乐播放
+	const innerAudioContext = uni.createInnerAudioContext();
+	innerAudioContext.autoplay = false;
+	innerAudioContext.src = 'https://web-ext-storage.dcloud.net.cn/uni-app/ForElise.mp3';
+
+	const MusicName = ref("哈哈哈哈哈") // 音乐名称
+	const autoplay = ref(false) // 音频状态，true表示正在播放，false表示暂停
+	const FanBeiAutoplay = () => {
+		// 点击图片上的播放按
+		autoplay.value = !autoplay.value
+		if (autoplay.value) {
+			innerAudioContext.play() // 播放
+		} else {
+			innerAudioContext.pause() // 暂停
+		}
+	}
+	innerAudioContext.onTimeUpdate(() => {
+
+		let duration = innerAudioContext.duration; //当前播放时间
+		let n = innerAudioContext.currentTime / duration; //进度比例
+		proceessWidth.value = parseInt(n * 100);
+		
+		audioInfo.value.currentTime = getMinTime(innerAudioContext.currentTime)
+		audioInfo.value.duration = getMinTime(duration)
+		
+		// 判断播放完毕
+		if (audioInfo.value.currentTime === audioInfo.value.duration) {
+			// 时间相等播放完毕了
+			autoplay.value = false  // 播放状态修改一下，歌词复位
+		}
+		
+		// let id_num = parseInt(audioContext.currentTime); //转int
+		// let lyric_p = this.Lyric; //获取歌
+		// let HeiTop = 150;
+
+		//播放到最后一行就不计入循环
+		// if (!this.LastLine) {
+		// 	for (var i = 0; i < lyric_p.length; i++) {
+		// 		//正常播放
+		// 		if (id_num == lyric_p[i].TimeSlot) {
+		// 			this.CurrentLocation = lyric_p[i].TimeSlot;
+		// 			if (i != 0) {
+		// 				for (var k = 0; k < i; k++) {
+		// 					if (parseInt(lyric_p[k].height) > 0) {
+		// 						HeiTop = HeiTop - (parseInt(lyric_p[k].height) * 2);
+		// 					}
+		// 				}
+		// 			}
+		// 			if (i == lyric_p.length - 1) {
+		// 				this.LastLine = true;
+		// 			}
+		// 			break;
+		// 			//没有找到位置的时候 或者拉拽进度的时候
+		// 		} else if (id_num < lyric_p[i].TimeSlot) {
+		// 			if (i != 0) {
+		// 				this.CurrentLocation = lyric_p[i - 1].TimeSlot;
+		// 				var tei = i - 1;
+		// 				if (tei > 0) {
+		// 					for (var k = 0; k < tei; k++) {
+		// 						if (parseInt(lyric_p[k].height) > 0) {
+		// 							HeiTop = HeiTop - (parseInt(lyric_p[k].height) * 2);
+		// 						}
+		// 					}
+		// 				}
+		// 				break;
+		// 			}
+		// 		} else {
+		// 			//重后一条歌词保持状态
+		// 			if (id_num > lyric_p[lyric_p.length - 1].TimeSlot) {
+		// 				HeiTop = 150
+		// 				this.CurrentLocation = lyric_p[lyric_p.length - 1].TimeSlot;
+		// 				for (var k = 0; k < lyric_p.length - 1; k++) {
+		// 					if (parseInt(lyric_p[k].height) > 0) {
+		// 						HeiTop = HeiTop - (parseInt(lyric_p[k].height) * 2);
+		// 					}
+		// 				}
+		// 				this.LastLine = true;
+		// 			}
+		// 		}
+		// 	}
+		// 	this.top = HeiTop;
+		// }
+
+	});
+
+	// 根据秒数获取 分钟：秒
+	const getMinTime = (s) => {
+		let ms = s * 1000; //获取毫秒
+		let date = new Date(ms);
+		let minute = date.getMinutes();  // 获取分钟
+		let second = date.getSeconds();  // 获取秒数
+		let formatTime = `${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`
+		return formatTime
+	}
 
 	// 音频控制方法
 	const sliderChange = (e) => {
@@ -577,7 +664,8 @@
 		to {
 			transform: rotate(360deg);
 		}
-	}	
+	}
+
 	.dh {
 		animation: rotateAnimation 6s linear infinite;
 	}
